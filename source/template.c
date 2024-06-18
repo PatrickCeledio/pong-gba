@@ -80,13 +80,13 @@ int main(void) {
 	pongBall.height = 10;
 	pongBall.velocityX = 0;
 	pongBall.velocityY = 0;
-	
-	// Draw white central line on screen
-	for (int j=0; j<SCREEN_HEIGHT; j++){
-		drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
-	}
 
 	while (1) {
+		// Draw white central line on screen
+		for (int j=0; j<SCREEN_HEIGHT; j++){
+			drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
+		}
+
 		VBlankIntrWait();
 
 		// Respond to user input
@@ -96,7 +96,7 @@ int main(void) {
 
 		// humanPaddle vertical movement logic 
 
-		// If a movement key is not pressed; velocity to 0
+		// If a movement key is not pressed or released; velocity to 0
 		if ((keys_released & KEY_UP) || (keys_released & KEY_DOWN)){
 			// Move up
 			humanPaddle.velocityY = 0;
@@ -116,14 +116,36 @@ int main(void) {
 		}
 
 		// If humanPaddle or cpuPaddle is next to ceiling or floor, stop it
-		if((humanPaddle.y <= 0 && humanPaddle.velocityY < 0) || 
-		((humanPaddle.y >= SCREEN_HEIGHT - humanPaddle.height) && 
-		humanPaddle.velocityY > 0)){
+		if(
+		(humanPaddle.y <= 0 && humanPaddle.velocityY < 0) // Without this, paddle will continue upward
+		|| 
+		((humanPaddle.y >= SCREEN_HEIGHT - humanPaddle.height) // 
+		&& 
+		humanPaddle.velocityY > 0))
+		{
 			humanPaddle.velocityY = 0;
+		}
+
+		// If pongBall hits any wall; have it bounce in reflection
+		if((pongBall.y <= 0 && pongBall.velocityY < 0) || 
+		((pongBall.y >= SCREEN_HEIGHT - pongBall.height) && 
+		pongBall.velocityY > 0)){
+			pongBall.velocityY = 0;
+		}
+
+		// If pongBall hits a paddle; have it bounce in reflection
+		if((pongBall.y <= 0 && pongBall.velocityY < 0) || 
+		((pongBall.y >= SCREEN_HEIGHT - pongBall.height) && 
+		pongBall.velocityY > 0)){
+			pongBall.velocityY = 0;
 		}
 
 		// Update movement speed of human paddle
 		humanPaddle.y += humanPaddle.velocityY;
+
+		// Pong ball movement
+		pongBall.velocityX = 2;
+		pongBall.x += pongBall.velocityX;
 
 		// Clear pixel footsteps 
 		clearRect(&humanPaddle);
@@ -137,6 +159,8 @@ int main(void) {
 
 		humanPaddle.prevX = humanPaddle.x;
 		humanPaddle.prevY = humanPaddle.y;
+		pongBall.prevX = pongBall.x;
+
 	}
 }
 
