@@ -1,5 +1,8 @@
 // Patrick CEledio
 
+#include <stdlib.h>
+#include <time.h>
+
 #include <gba_video.h>
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
@@ -40,6 +43,37 @@ void clearRect(struct rect* cRect){
 			drawPixel(i, j, 0x0000);
 		}
 	}
+};
+
+// Reset pong ball
+void resetBall(struct rect* cRect){
+	// Set ball to center of the screen
+	cRect->x = (SCREEN_WIDTH/2) - (cRect->width/2);
+	cRect->y = (SCREEN_HEIGHT/2) - (cRect->height/2);
+
+	// Randomize initizal direction of the ball
+	cRect->velocityX = (rand() % 2 == 0) ? 2 : -2;
+	cRect->velocityY = (rand() % 2 == 0) ? 2 : -2;
+
+	// Reset the previous position to the current position
+	cRect->prevX = cRect->x;
+	cRect->prevY = cRect->y;
+};
+
+// Check pongBall collision
+void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect* cpuPaddle){
+		// If humanPaddle or cpuPaddle is next to ceiling or floor, stop it
+		if((humanPaddle->y <= 0 && humanPaddle->velocityY < 0) || ((humanPaddle->y >= SCREEN_HEIGHT - humanPaddle->height) 
+			&& humanPaddle->velocityY > 0))
+		{
+			humanPaddle->velocityY = 0;
+		}
+
+		// If pongBall hits a wall on the y-axis; have it bounce in reflection
+		if((pongBall->y <= 0 && pongBall->velocityY < 0) || ((pongBall->y >= SCREEN_HEIGHT - pongBall->height) 
+			&& pongBall->velocityY > 0)){
+			pongBall->velocityY = -pongBall->velocityY;
+		}
 };
 
 int main(void) {
@@ -115,30 +149,7 @@ int main(void) {
 			humanPaddle.velocityY = 2;
 		}
 
-		// If humanPaddle or cpuPaddle is next to ceiling or floor, stop it
-		if(
-		(humanPaddle.y <= 0 && humanPaddle.velocityY < 0) // Without this, paddle will continue upward
-		|| 
-		((humanPaddle.y >= SCREEN_HEIGHT - humanPaddle.height) // 
-		&& 
-		humanPaddle.velocityY > 0))
-		{
-			humanPaddle.velocityY = 0;
-		}
-
-		// If pongBall hits any wall; have it bounce in reflection
-		if((pongBall.y <= 0 && pongBall.velocityY < 0) || 
-		((pongBall.y >= SCREEN_HEIGHT - pongBall.height) && 
-		pongBall.velocityY > 0)){
-			pongBall.velocityY = 0;
-		}
-
-		// If pongBall hits a paddle; have it bounce in reflection
-		if((pongBall.y <= 0 && pongBall.velocityY < 0) || 
-		((pongBall.y >= SCREEN_HEIGHT - pongBall.height) && 
-		pongBall.velocityY > 0)){
-			pongBall.velocityY = 0;
-		}
+		checkCollision(&pongBall, &humanPaddle, &cpuPaddle);
 
 		// Update movement speed of human paddle
 		humanPaddle.y += humanPaddle.velocityY;
@@ -157,6 +168,7 @@ int main(void) {
 		drawRect(&cpuPaddle);
 		drawRect(&pongBall);
 
+		// Update position
 		humanPaddle.prevX = humanPaddle.x;
 		humanPaddle.prevY = humanPaddle.y;
 		pongBall.prevX = pongBall.x;
