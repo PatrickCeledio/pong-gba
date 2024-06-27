@@ -69,11 +69,34 @@ void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect
 			humanPaddle->velocityY = 0;
 		}
 
-		// If pongBall hits a wall on the y-axis; have it bounce in reflection
-		if((pongBall->y <= 0 && pongBall->velocityY < 0) || ((pongBall->y >= SCREEN_HEIGHT - pongBall->height) 
-			&& pongBall->velocityY > 0)){
-			pongBall->velocityY = -pongBall->velocityY;
+		// Check collision between pong ball and left wall
+		if (pongBall->x <= 0){
+			clearRect(pongBall);
+			resetBall(pongBall);
+
+		// Check collision between pong ball and right wall
+		}else if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
+			clearRect(pongBall);
+			resetBall(pongBall);
+
 		}
+
+		// Check collision betwen pong ball and cpu paddle
+		if (pongBall->x <= cpuPaddle->x + cpuPaddle->width &&
+			pongBall->x + pongBall->width >= cpuPaddle->x &&
+			pongBall->y + pongBall->height >= cpuPaddle->y &&
+			pongBall->y <= cpuPaddle->y + cpuPaddle->height){
+				pongBall->velocityX = -pongBall->velocityX;
+			}
+
+		// // Check collision between pong ball and human paddle
+		// if (pongBall->x + pongBall->width >= humanPaddle->x &&
+		// 	pongBall->x <= humanPaddle->x + humanPaddle->width &&
+		// 	pongBall->y + pongBall->height >= ){
+		// 		pongBall->velocityX = -pongBall->velocityX;
+		// 	}
+
+
 };
 
 int main(void) {
@@ -172,6 +195,7 @@ int main(void) {
 		humanPaddle.prevX = humanPaddle.x;
 		humanPaddle.prevY = humanPaddle.y;
 		pongBall.prevX = pongBall.x;
+
 
 	}
 }
