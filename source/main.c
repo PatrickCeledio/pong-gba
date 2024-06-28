@@ -1,6 +1,7 @@
 // Patrick CEledio
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
 #include <gba_video.h>
@@ -63,10 +64,19 @@ void resetBall(struct rect* cRect){
 // Check pongBall collision
 void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect* cpuPaddle){
 		// If humanPaddle or cpuPaddle is next to ceiling or floor, stop it
-		if((humanPaddle->y <= 0 && humanPaddle->velocityY < 0) || ((humanPaddle->y >= SCREEN_HEIGHT - humanPaddle->height) 
-			&& humanPaddle->velocityY > 0))
+		if((humanPaddle->y <= 0 && humanPaddle->velocityY < 0) || 
+		   ((humanPaddle->y >= SCREEN_HEIGHT - humanPaddle->height) && 
+			humanPaddle->velocityY > 0))
 		{
 			humanPaddle->velocityY = 0;
+		}
+
+		// Check collision between pong ball and ceiling or floor
+		if((pongBall->y <= 0 && pongBall->velocityY < 0)||
+			((pongBall->y >= SCREEN_HEIGHT - pongBall->height)&&
+			 pongBall->velocityY > 0))
+			{
+				pongBall->velocityY = -pongBall->velocityY;
 		}
 
 		// Check collision between pong ball and left wall
@@ -74,28 +84,42 @@ void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect
 			clearRect(pongBall);
 			resetBall(pongBall);
 
+		}
 		// Check collision between pong ball and right wall
-		}else if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
+		else if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
 			clearRect(pongBall);
 			resetBall(pongBall);
 
 		}
 
 		// Check collision betwen pong ball and cpu paddle
-		if (pongBall->x <= cpuPaddle->x + cpuPaddle->width &&
-			pongBall->x + pongBall->width >= cpuPaddle->x &&
+		if (pongBall->x + pongBall->width >= cpuPaddle->x &&
+			pongBall->x <= cpuPaddle->x + cpuPaddle->width &&
 			pongBall->y + pongBall->height >= cpuPaddle->y &&
 			pongBall->y <= cpuPaddle->y + cpuPaddle->height){
 				pongBall->velocityX = -pongBall->velocityX;
 			}
 
 		// // Check collision between pong ball and human paddle
-		// if (pongBall->x + pongBall->width >= humanPaddle->x &&
-		// 	pongBall->x <= humanPaddle->x + humanPaddle->width &&
-		// 	pongBall->y + pongBall->height >= ){
-		// 		pongBall->velocityX = -pongBall->velocityX;
-		// 	}
+		if (pongBall->x <= humanPaddle->x + humanPaddle->width &&
+			pongBall->x + pongBall->width >= humanPaddle->x &&
+			pongBall->y + pongBall->height >= humanPaddle->y &&
+			pongBall->y <= humanPaddle->y + humanPaddle->height){
+				pongBall->velocityX = -pongBall->velocityX;
+			}
 
+
+};
+
+void updateBall(struct rect* pongBall){
+	pongBall->prevX = pongBall->x;
+	pongBall->prevY = pongBall->y;
+	pongBall->x += pongBall->velocityX;
+	pongBall->y += pongBall->velocityY;
+
+}
+
+void updatePongBallPos(struct rect* pongBall){
 
 };
 
@@ -106,6 +130,9 @@ int main(void) {
 	// Set GBA to mode 3; video memory
 	SetMode( MODE_3 | BG2_ON );
 
+	// Seed the RNG for resetBall()
+	srand(time(NULL));
+
 	// Initialize Human paddle
 	struct rect humanPaddle;
 	humanPaddle.x = 1;
@@ -113,7 +140,7 @@ int main(void) {
 	humanPaddle.prevX = humanPaddle.x;
 	humanPaddle.prevY = humanPaddle.y;
 	humanPaddle.width = 8;
-	humanPaddle.height = 24;
+	humanPaddle.height = 30;
 	humanPaddle.velocityX = 0;
 	humanPaddle.velocityY = 0;
 
@@ -124,7 +151,7 @@ int main(void) {
 	cpuPaddle.prevX = cpuPaddle.x;
 	cpuPaddle.prevY = cpuPaddle.y;
 	cpuPaddle.width = 8;
-	cpuPaddle.height = 24;
+	cpuPaddle.height = 30;
 	cpuPaddle.velocityX = 0;
 	cpuPaddle.velocityY = 0;
 
@@ -137,6 +164,8 @@ int main(void) {
 	pongBall.height = 10;
 	pongBall.velocityX = 0;
 	pongBall.velocityY = 0;
+
+	resetBall(&pongBall);
 
 	while (1) {
 		// Draw white central line on screen
@@ -172,14 +201,11 @@ int main(void) {
 			humanPaddle.velocityY = 2;
 		}
 
+		updateBall(&pongBall);
 		checkCollision(&pongBall, &humanPaddle, &cpuPaddle);
 
 		// Update movement speed of human paddle
 		humanPaddle.y += humanPaddle.velocityY;
-
-		// Pong ball movement
-		pongBall.velocityX = 2;
-		pongBall.x += pongBall.velocityX;
 
 		// Clear pixel footsteps 
 		clearRect(&humanPaddle);
