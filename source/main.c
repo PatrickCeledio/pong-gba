@@ -119,10 +119,6 @@ void updateBall(struct rect* pongBall){
 
 }
 
-void updatePongBallPos(struct rect* pongBall){
-
-};
-
 int main(void) {
 	irqInit();
 	irqEnable(IRQ_VBLANK);

@@ -3,6 +3,10 @@
 My first attempt at making a complete video game for the Nintendo Game Boy Advance
 in C language. 
 
+Prereq:
+- Download and run the devKitPro installer from https://devkitpro.org/wiki/Getting_Started
+- Have a GBA emulator on your PC (I use mGBA) 
+
 To run:
 1) Go into "/c/dev/gba_dev/pong-gba" directory
 2) Type and enter "make" to compile the .gba file
