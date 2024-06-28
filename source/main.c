@@ -62,13 +62,13 @@ void resetBall(struct rect* cRect){
 };
 
 // Check pongBall collision
-void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect* cpuPaddle){
-		// If humanPaddle or cpuPaddle is next to ceiling or floor, stop it
-		if((humanPaddle->y <= 0 && humanPaddle->velocityY < 0) || 
-		   ((humanPaddle->y >= SCREEN_HEIGHT - humanPaddle->height) && 
-			humanPaddle->velocityY > 0))
+void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rect* cpuPaddle){
+		// If playerPaddle or cpuPaddle is next to ceiling or floor, stop it
+		if((playerPaddle->y <= 0 && playerPaddle->velocityY < 0) || 
+		   ((playerPaddle->y >= SCREEN_HEIGHT - playerPaddle->height) && 
+			playerPaddle->velocityY > 0))
 		{
-			humanPaddle->velocityY = 0;
+			playerPaddle->velocityY = 0;
 		}
 
 		// Check collision between pong ball and ceiling or floor
@@ -100,11 +100,11 @@ void checkCollision(struct rect* pongBall, struct rect* humanPaddle, struct rect
 				pongBall->velocityX = -pongBall->velocityX;
 			}
 
-		// // Check collision between pong ball and human paddle
-		if (pongBall->x <= humanPaddle->x + humanPaddle->width &&
-			pongBall->x + pongBall->width >= humanPaddle->x &&
-			pongBall->y + pongBall->height >= humanPaddle->y &&
-			pongBall->y <= humanPaddle->y + humanPaddle->height){
+		// // Check collision between pong ball and player paddle
+		if (pongBall->x <= playerPaddle->x + playerPaddle->width &&
+			pongBall->x + pongBall->width >= playerPaddle->x &&
+			pongBall->y + pongBall->height >= playerPaddle->y &&
+			pongBall->y <= playerPaddle->y + playerPaddle->height){
 				pongBall->velocityX = -pongBall->velocityX;
 			}
 
@@ -133,16 +133,16 @@ int main(void) {
 	// Seed the RNG for resetBall()
 	srand(time(NULL));
 
-	// Initialize Human paddle
-	struct rect humanPaddle;
-	humanPaddle.x = 1;
-	humanPaddle.y = SCREEN_HEIGHT/2 - 24/2;
-	humanPaddle.prevX = humanPaddle.x;
-	humanPaddle.prevY = humanPaddle.y;
-	humanPaddle.width = 8;
-	humanPaddle.height = 30;
-	humanPaddle.velocityX = 0;
-	humanPaddle.velocityY = 0;
+	// Initialize player paddle
+	struct rect playerPaddle;
+	playerPaddle.x = 1;
+	playerPaddle.y = SCREEN_HEIGHT/2 - 24/2;
+	playerPaddle.prevX = playerPaddle.x;
+	playerPaddle.prevY = playerPaddle.y;
+	playerPaddle.width = 8;
+	playerPaddle.height = 30;
+	playerPaddle.velocityX = 0;
+	playerPaddle.velocityY = 0;
 
 	// Initialize CPU paddle
 	struct rect cpuPaddle;
@@ -180,46 +180,46 @@ int main(void) {
 		int keys_pressed = keysDown();
 		int keys_released = keysUp();
 
-		// humanPaddle vertical movement logic 
+		// playerPaddle vertical movement logic 
 
 		// If a movement key is not pressed or released; velocity to 0
 		if ((keys_released & KEY_UP) || (keys_released & KEY_DOWN)){
 			// Move up
-			humanPaddle.velocityY = 0;
+			playerPaddle.velocityY = 0;
 		}
 
-		// If up is pressed; move humanPaddle up
-		if ((keys_pressed & KEY_UP) && humanPaddle.y >= 0){
+		// If up is pressed; move playerPaddle up
+		if ((keys_pressed & KEY_UP) && playerPaddle.y >= 0){
 			// Essentially, velocity is -2
-			humanPaddle.velocityY = -2;
+			playerPaddle.velocityY = -2;
 		}
 
 		// If down is pressed; velocity to +2
-		if((keys_pressed & KEY_DOWN) && humanPaddle.y 
-			<= SCREEN_HEIGHT - humanPaddle.height){
+		if((keys_pressed & KEY_DOWN) && playerPaddle.y 
+			<= SCREEN_HEIGHT - playerPaddle.height){
 			// Essentially, velocity is +2
-			humanPaddle.velocityY = 2;
+			playerPaddle.velocityY = 2;
 		}
 
 		updateBall(&pongBall);
-		checkCollision(&pongBall, &humanPaddle, &cpuPaddle);
+		checkCollision(&pongBall, &playerPaddle, &cpuPaddle);
 
-		// Update movement speed of human paddle
-		humanPaddle.y += humanPaddle.velocityY;
+		// Update movement speed of player paddle
+		playerPaddle.y += playerPaddle.velocityY;
 
 		// Clear pixel footsteps 
-		clearRect(&humanPaddle);
+		clearRect(&playerPaddle);
 		clearRect(&cpuPaddle);
 		clearRect(&pongBall);
 
 		// Draw the following objects on screen
-		drawRect(&humanPaddle);
+		drawRect(&playerPaddle);
 		drawRect(&cpuPaddle);
 		drawRect(&pongBall);
 
 		// Update position
-		humanPaddle.prevX = humanPaddle.x;
-		humanPaddle.prevY = humanPaddle.y;
+		playerPaddle.prevX = playerPaddle.x;
+		playerPaddle.prevY = playerPaddle.y;
 		pongBall.prevX = pongBall.x;
 
 
