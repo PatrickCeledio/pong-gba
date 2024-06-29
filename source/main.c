@@ -9,6 +9,7 @@
 #include <gba_systemcalls.h>
 #include <gba_input.h>
 
+
 // Definitions for rendering graphics
 #define MEM_VRAM 		0x06000000
 #define SCREEN_WIDTH	240
@@ -17,6 +18,9 @@
 // Need these for essentially writing directly to frame buffer with VRAM 
 typedef u16		M3LINE[SCREEN_WIDTH];
 #define m3_mem	((M3LINE*)MEM_VRAM)
+
+// Definitions for in-game objects
+#define CPU_PADDLE_SPEED 2
 
 // Paddle and ball structure (To basically make rectangles)
 struct rect { 
@@ -117,7 +121,19 @@ void updateBall(struct rect* pongBall){
 	pongBall->x += pongBall->velocityX;
 	pongBall->y += pongBall->velocityY;
 
-}
+};
+
+void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
+	// Update cpuPaddle position
+	cpuPaddle->prevY = cpuPaddle->y;
+
+	if (pongBall->y < cpuPaddle->y){
+		cpuPaddle->y -= CPU_PADDLE_SPEED;
+	}
+	else if (pongBall->y + pongBall->height > cpuPaddle->y + cpuPaddle->height){
+		cpuPaddle->y += CPU_PADDLE_SPEED;
+	}
+};
 
 int main(void) {
 	irqInit();
@@ -136,7 +152,7 @@ int main(void) {
 	playerPaddle.prevX = playerPaddle.x;
 	playerPaddle.prevY = playerPaddle.y;
 	playerPaddle.width = 8;
-	playerPaddle.height = 30;
+	playerPaddle.height = 32;
 	playerPaddle.velocityX = 0;
 	playerPaddle.velocityY = 0;
 
@@ -147,7 +163,7 @@ int main(void) {
 	cpuPaddle.prevX = cpuPaddle.x;
 	cpuPaddle.prevY = cpuPaddle.y;
 	cpuPaddle.width = 8;
-	cpuPaddle.height = 30;
+	cpuPaddle.height = 32;
 	cpuPaddle.velocityX = 0;
 	cpuPaddle.velocityY = 0;
 
@@ -197,11 +213,14 @@ int main(void) {
 			playerPaddle.velocityY = 2;
 		}
 
-		updateBall(&pongBall);
-		checkCollision(&pongBall, &playerPaddle, &cpuPaddle);
-
 		// Update movement speed of player paddle
 		playerPaddle.y += playerPaddle.velocityY;
+
+		updateBall(&pongBall);
+		updateCpuPaddle(&cpuPaddle, &pongBall);
+		checkCollision(&pongBall, &playerPaddle, &cpuPaddle);
+
+
 
 		// Clear pixel footsteps 
 		clearRect(&playerPaddle);
