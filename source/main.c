@@ -8,7 +8,7 @@
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 #include <gba_input.h>
-
+#include <gba.h>
 
 // Definitions for rendering graphics
 #define MEM_VRAM 		0x06000000
@@ -50,7 +50,7 @@ void clearRect(struct rect* cRect){
 	}
 };
 
-// Reset pong ball
+// Initializes pong ball the first time its called; acts as a reset afterwards
 void resetBall(struct rect* cRect){
 	// Set ball to center of the screen
 	cRect->x = (SCREEN_WIDTH/2) - (cRect->width/2);
@@ -135,17 +135,33 @@ void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
 	}
 };
 
-int main(void) {
+void initTextConsole(){
+	consoleDemoInit();
+}
+
+void initGBA(){
 	irqInit();
 	irqEnable(IRQ_VBLANK);
 
 	// Set GBA to mode 3; video memory
 	SetMode( MODE_3 | BG2_ON );
+}
+
+void drawCenterLine(){
+	// Draw white central line on screen
+	for (int j=0; j<SCREEN_HEIGHT; j++){
+		drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
+	}
+};
+
+int main(void) {
+	// Sets up the necessary configurations for the GBA to run this game
+	initGBA();
 
 	// Seed the RNG for resetBall()
 	srand(time(NULL));
 
-	// Initialize player paddle
+	// Initialize player paddle obj
 	struct rect playerPaddle;
 	playerPaddle.x = 1;
 	playerPaddle.y = SCREEN_HEIGHT/2 - 24/2;
@@ -156,7 +172,7 @@ int main(void) {
 	playerPaddle.velocityX = 0;
 	playerPaddle.velocityY = 0;
 
-	// Initialize CPU paddle
+	// Initialize CPU paddle obj
 	struct rect cpuPaddle;
 	cpuPaddle.x = SCREEN_WIDTH - 8 - 1;
 	cpuPaddle.y = SCREEN_HEIGHT/2 - 24/2;
@@ -167,6 +183,7 @@ int main(void) {
 	cpuPaddle.velocityX = 0;
 	cpuPaddle.velocityY = 0;
 
+	// Initialize pongBall obj
 	struct rect pongBall;
 	pongBall.x = SCREEN_WIDTH/2 - 8/2;
 	pongBall.y = SCREEN_HEIGHT/2 - 8/2;
@@ -177,15 +194,15 @@ int main(void) {
 	pongBall.velocityX = 0;
 	pongBall.velocityY = 0;
 
+	// Initialize position and velocity of pongball to default
 	resetBall(&pongBall);
 
 	while (1) {
-		// Draw white central line on screen
-		for (int j=0; j<SCREEN_HEIGHT; j++){
-			drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
-		}
-
+		// Updates game objects before the next frame is drawn
 		VBlankIntrWait();
+
+		// Draw line down center of pong field
+		drawCenterLine();
 
 		// Respond to user input
 		scanKeys();
@@ -219,8 +236,6 @@ int main(void) {
 		updateBall(&pongBall);
 		updateCpuPaddle(&cpuPaddle, &pongBall);
 		checkCollision(&pongBall, &playerPaddle, &cpuPaddle);
-
-
 
 		// Clear pixel footsteps 
 		clearRect(&playerPaddle);
