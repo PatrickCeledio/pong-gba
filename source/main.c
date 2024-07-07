@@ -28,7 +28,7 @@ struct rect {
 };
 
 // Draw pixel function; writing individual pixel values to frame buffer
-void drawPixel(int x, int y, int color){
+void inline drawPixel(int x, int y, int color){
 	m3_mem[y][x] = color;
 };
 
@@ -83,17 +83,10 @@ void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rec
 				pongBall->velocityY = -pongBall->velocityY;
 		}
 
-		// Check collision between pong ball and left wall
-		if (pongBall->x <= 0){
+		// Check collision between pong ball and left or right walls
+		if (pongBall->x <= 0 || pongBall->x + pongBall->width >= SCREEN_WIDTH){
 			clearRect(pongBall);
 			resetBall(pongBall);
-
-		}
-		// Check collision between pong ball and right wall
-		else if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
-			clearRect(pongBall);
-			resetBall(pongBall);
-
 		}
 
 		// Check collision betwen pong ball and cpu paddle
@@ -115,7 +108,7 @@ void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rec
 
 };
 
-void updateBall(struct rect* pongBall){
+void static inline updateBall(struct rect* pongBall){
 	pongBall->prevX = pongBall->x;
 	pongBall->prevY = pongBall->y;
 	pongBall->x += pongBall->velocityX;
@@ -129,13 +122,14 @@ void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
 
 	if (pongBall->y < cpuPaddle->y){
 		cpuPaddle->y -= CPU_PADDLE_SPEED;
+		iprintf("\x1b[10;10HHello World!");
 	}
 	else if (pongBall->y + pongBall->height > cpuPaddle->y + cpuPaddle->height){
 		cpuPaddle->y += CPU_PADDLE_SPEED;
 	}
 };
 
-void initTextConsole(){
+void inline initTextConsole(){
 	consoleDemoInit();
 }
 
@@ -147,7 +141,7 @@ void initGBA(){
 	SetMode( MODE_3 | BG2_ON );
 }
 
-void drawCenterLine(){
+void inline drawCenterLine(){
 	// Draw white central line on screen
 	for (int j=0; j<SCREEN_HEIGHT; j++){
 		drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
@@ -196,6 +190,7 @@ int main(void) {
 
 	// Initialize position and velocity of pongball to default
 	resetBall(&pongBall);
+
 
 	while (1) {
 		// Updates game objects before the next frame is drawn
