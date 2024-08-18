@@ -17,8 +17,8 @@
 #define DASH_LENGTH		6
 #define GAP_LENGTH		4
 #define LINE_X_POSITION (SCREEN_WIDTH / 2)
-#define playerPaddle_color 0x7C00
-#define cpuPaddle_color 0x03E0
+#define PLAYERPADDLE_COLOR 0x7C00
+#define CPUPADDLE_COLOR 0x03E0
 
 
 // Need these for essentially writing directly to frame buffer with VRAM 
@@ -50,7 +50,7 @@ void drawRect(struct rect* cRect){
 void drawCpuPaddle(struct rect* cRect){
 	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
 		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
-			drawPixel(i, j, cpuPaddle_color);
+			drawPixel(i, j, CPUPADDLE_COLOR);
 		}
 	}
 };
@@ -59,7 +59,7 @@ void drawCpuPaddle(struct rect* cRect){
 void drawPlayerPaddle(struct rect* cRect){
 	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
 		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
-			drawPixel(i, j, playerPaddle_color);
+			drawPixel(i, j, PLAYERPADDLE_COLOR);
 		}
 	}
 };
