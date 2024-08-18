@@ -20,7 +20,8 @@
 #define LINE_X_POSITION (SCREEN_WIDTH / 2)
 #define PLAYERPADDLE_COLOR 0x7C00
 #define CPUPADDLE_COLOR 0x03E0
-
+#define DIGIT_WIDTH  5
+#define DIGIT_HEIGHT 7
 
 // Need these for essentially writing directly to frame buffer with VRAM 
 typedef u16		M3LINE[SCREEN_WIDTH];
@@ -29,9 +30,114 @@ typedef u16		M3LINE[SCREEN_WIDTH];
 // Definitions for in-game objects
 #define CPU_PADDLE_SPEED 2
 
-
+// Global variables for score
 int playerScore = 0;
 int cpuScore = 0;
+
+// Okay, I need dedicated header and source files now; these are digits for score
+// 0 = pixels left blank; 1 = pixels to be drawn
+const u8 digits[10][DIGIT_HEIGHT] = {
+    // 0
+    {
+        0b01110,
+        0b10001,
+        0b10011,
+        0b10101,
+        0b11001,
+        0b10001,
+        0b01110
+    },
+    // 1
+    {
+        0b00100,
+        0b01100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b01110
+    },
+    // 2
+    {
+        0b01110,
+        0b10001,
+        0b00001,
+        0b00110,
+        0b01000,
+        0b10000,
+        0b11111
+    },
+    // 3
+    {
+        0b01110,
+        0b10001,
+        0b00001,
+        0b00110,
+        0b00001,
+        0b10001,
+        0b01110
+    },
+    // 4
+    {
+        0b00010,
+        0b00110,
+        0b01010,
+        0b10010,
+        0b11111,
+        0b00010,
+        0b00010
+    },
+    // 5
+    {
+        0b11111,
+        0b10000,
+        0b11110,
+        0b00001,
+        0b00001,
+        0b10001,
+        0b01110
+    },
+    // 6
+    {
+        0b00110,
+        0b01000,
+        0b10000,
+        0b11110,
+        0b10001,
+        0b10001,
+        0b01110
+    },
+    // 7
+    {
+        0b11111,
+        0b00001,
+        0b00010,
+        0b00100,
+        0b01000,
+        0b01000,
+        0b01000
+    },
+    // 8
+    {
+        0b01110,
+        0b10001,
+        0b10001,
+        0b01110,
+        0b10001,
+        0b10001,
+        0b01110
+    },
+    // 9
+    {
+        0b01110,
+        0b10001,
+        0b10001,
+        0b01111,
+        0b00001,
+        0b00010,
+        0b11100
+    }
+};
 
 // Paddle and ball structure (To basically make rectangles)
 struct rect { 
@@ -69,6 +175,50 @@ void drawPlayerPaddle(struct rect* cRect){
 	}
 };
 
+void drawNumber(int num, int x, int y, u16 color){
+	// Ensure number is a single digit
+	if (num < 0 || num > 9){
+		return ;
+	} 
+
+	struct rect pixel;
+
+	// Loop over digit's bitmap and draw corresponding pixels
+	for (int row = 0; row < DIGIT_HEIGHT; row++){
+		for (int col = 0; col < DIGIT_WIDTH; col++){
+			if (digits[num][row] & (1 << (DIGIT_WIDTH - 1 - col))) {
+				pixel.x = x + col;
+                pixel.y = y + row;
+                pixel.width = 1;
+                pixel.height = 1;
+				drawRect(&pixel); // Draws a 1x1 pixel
+			}
+		}
+	}
+};
+
+void drawScore(int score, int x, int y, u16 color){
+	int tens = score / 10; // Tens digit
+	int units = score % 10; // Ones digit
+
+	if (tens > 0){
+		drawNumber(tens, x, y, color);
+	}
+
+	drawNumber(units, x + DIGIT_WIDTH + 1, y, color);
+}
+
+void clearScoreArea(int x, int y){
+	// Create an eraser area size
+	int width = (DIGIT_WIDTH + 1) * 2; 
+	int height = DIGIT_HEIGHT;
+
+	for (int i = x; i < x + width; i++){
+		for (int j = y; j < y + height; j++) { 
+			drawPixel(i, j, 0x0000); // Clear area with black (0x0000)
+		}
+	}
+}
 
 // Clear the pixels when objects moves
 void clearRect(struct rect* cRect){
@@ -112,13 +262,16 @@ void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rec
 				pongBall->velocityY = -pongBall->velocityY;
 		}
 
-		// Check collision between pong ball and left or right walls
+		// Check collision between pong ball and left wall (Player misses)
 		if (pongBall->x <= 0){
+			cpuScore++;
 			clearRect(pongBall);
 			resetBall(pongBall);
 		}
 
+		// Check collision between pong ball and right wall (CPU misses)
 		if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
+			playerScore++;
 			clearRect(pongBall);
 			resetBall(pongBall);
 		}
@@ -140,8 +293,6 @@ void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rec
 			pongBall->y <= playerPaddle->y + playerPaddle->height){
 				pongBall->velocityX = -pongBall->velocityX;
 			}
-
-
 };
 
 void static inline updateBall(struct rect* pongBall){
@@ -149,7 +300,6 @@ void static inline updateBall(struct rect* pongBall){
 	pongBall->prevY = pongBall->y;
 	pongBall->x += pongBall->velocityX;
 	pongBall->y += pongBall->velocityY;
-
 };
 
 void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
@@ -167,7 +317,7 @@ void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
 
 void inline initTextConsole(){
 	consoleDemoInit();
-}
+};
 
 void initGBA(){
 	irqInit();
@@ -175,8 +325,8 @@ void initGBA(){
 
 	// Set GBA to mode 3; video memory
 	// SetMode( MODE_3 | BG2_ON );
-	REG_DISPCNT = MODE_3 | BG2_ENABLE;
-}
+	REG_DISPCNT = MODE_3 | BG2_ENABLE; // This line probably does what the above line does
+};
 
 void inline drawCenterLine(){
 	// Draw white central line on screen
@@ -187,6 +337,7 @@ void inline drawCenterLine(){
 	}
 
 };
+
 
 int main(void) {
 	// Sets up the necessary configurations for the GBA to run this game
@@ -282,6 +433,10 @@ int main(void) {
 		drawPlayerPaddle(&playerPaddle);
 		drawCpuPaddle(&cpuPaddle);
 		drawRect(&pongBall);
+		clearScoreArea(20, 10);
+		clearScoreArea(200,10);
+		drawScore(playerScore, 20, 10, 0x7FFF);
+		drawScore(cpuScore, 200, 10, 0x7FFF);
 
 		// Update position
 		playerPaddle.prevX = playerPaddle.x;
