@@ -14,6 +14,9 @@
 #define MEM_VRAM 		0x06000000
 #define SCREEN_WIDTH	240
 #define SCREEN_HEIGHT 	160
+#define DASH_LENGTH		6
+#define GAP_LENGTH		4
+#define LINE_X_POSITION (SCREEN_WIDTH / 2)
 
 // Need these for essentially writing directly to frame buffer with VRAM 
 typedef u16		M3LINE[SCREEN_WIDTH];
@@ -143,9 +146,12 @@ void initGBA(){
 
 void inline drawCenterLine(){
 	// Draw white central line on screen
-	for (int j=0; j<SCREEN_HEIGHT; j++){
-		drawPixel(SCREEN_WIDTH/2, j, 0x7FFF);
+	for (int vertical_line = 0; vertical_line < SCREEN_HEIGHT; vertical_line += (DASH_LENGTH + GAP_LENGTH)){
+		for (int dashY = vertical_line; dashY < vertical_line + DASH_LENGTH && dashY < SCREEN_HEIGHT; dashY++){
+			drawPixel(LINE_X_POSITION, dashY, 0x7FFF);
+		}
 	}
+
 };
 
 int main(void) {
