@@ -22,6 +22,8 @@
 #define CPUPADDLE_COLOR 0x03E0
 #define DIGIT_WIDTH  5
 #define DIGIT_HEIGHT 7
+#define LETTER_WIDTH  5
+#define LETTER_HEIGHT 7
 
 // Need these for essentially writing directly to frame buffer with VRAM 
 typedef u16		M3LINE[SCREEN_WIDTH];
@@ -139,6 +141,271 @@ const u8 digits[10][DIGIT_HEIGHT] = {
     }
 };
 
+// Jesus Christ Bitmap
+
+const u8 alphabet[26][LETTER_HEIGHT] = {
+    // A
+    {
+        0b01110,
+        0b10001,
+        0b10001,
+        0b11111,
+        0b10001,
+        0b10001,
+        0b10001
+    },
+    // B
+    {
+        0b11110,
+        0b10001,
+        0b10001,
+        0b11110,
+        0b10001,
+        0b10001,
+        0b11110
+    },
+    // C
+    {
+        0b01110,
+        0b10001,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10001,
+        0b01110
+    },
+    // D
+    {
+        0b11110,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b11110
+    },
+    // E
+    {
+        0b11111,
+        0b10000,
+        0b10000,
+        0b11110,
+        0b10000,
+        0b10000,
+        0b11111
+    },
+    // F
+    {
+        0b11111,
+        0b10000,
+        0b10000,
+        0b11110,
+        0b10000,
+        0b10000,
+        0b10000
+    },
+    // G
+    {
+        0b01110,
+        0b10001,
+        0b10000,
+        0b10111,
+        0b10001,
+        0b10001,
+        0b01110
+    },
+    // H
+    {
+        0b10001,
+        0b10001,
+        0b10001,
+        0b11111,
+        0b10001,
+        0b10001,
+        0b10001
+    },
+    // I
+    {
+        0b01110,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b01110
+    },
+    // J
+    {
+        0b00111,
+        0b00010,
+        0b00010,
+        0b00010,
+        0b00010,
+        0b10010,
+        0b01100
+    },
+    // K
+    {
+        0b10001,
+        0b10010,
+        0b10100,
+        0b11000,
+        0b10100,
+        0b10010,
+        0b10001
+    },
+    // L
+    {
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b11111
+    },
+    // M
+    {
+        0b10001,
+        0b11011,
+        0b10101,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001
+    },
+    // N
+    {
+        0b10001,
+        0b11001,
+        0b10101,
+        0b10011,
+        0b10001,
+        0b10001,
+        0b10001
+    },
+    // O
+    {
+        0b01110,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b01110
+    },
+    // P
+    {
+        0b11110,
+        0b10001,
+        0b10001,
+        0b11110,
+        0b10000,
+        0b10000,
+        0b10000
+    },
+    // Q
+    {
+        0b01110,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10101,
+        0b10010,
+        0b01101
+    },
+    // R
+    {
+        0b11110,
+        0b10001,
+        0b10001,
+        0b11110,
+        0b10100,
+        0b10010,
+        0b10001
+    },
+    // S
+    {
+        0b01111,
+        0b10000,
+        0b10000,
+        0b01110,
+        0b00001,
+        0b00001,
+        0b11110
+    },
+    // T
+    {
+        0b11111,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100
+    },
+    // U
+    {
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b01110
+    },
+    // V
+    {
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b01010,
+        0b00100
+    },
+    // W
+    {
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10101,
+        0b11011,
+        0b10001
+    },
+    // X
+    {
+        0b10001,
+        0b10001,
+        0b01010,
+        0b00100,
+        0b01010,
+        0b10001,
+        0b10001
+    },
+    // Y
+    {
+        0b10001,
+        0b10001,
+        0b01010,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100
+    },
+    // Z
+    {
+        0b11111,
+        0b00001,
+        0b00010,
+        0b00100,
+        0b01000,
+        0b10000,
+        0b11111
+    }
+};
+
 // Paddle and ball structure (To basically make rectangles)
 struct rect { 
 	int x, y, width, height, velocityX, velocityY, prevX, prevY;
@@ -149,11 +416,20 @@ void inline drawPixel(int x, int y, int color){
 	m3_mem[y][x] = color;
 };
 
-// Draw paddle and ball
+// Draw rectangles..........
 void drawRect(struct rect* cRect){
 	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
 		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
 			drawPixel(i, j, 0x7FFF);
+		}
+	}
+};
+
+// Draw ball
+void drawBall(struct rect* cRect){
+	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
+		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
+			drawPixel(i, j, 0x7FCF);
 		}
 	}
 };
@@ -181,17 +457,17 @@ void drawNumber(int num, int x, int y, u16 color){
 		return ;
 	} 
 
-	struct rect pixel;
 
 	// Loop over digit's bitmap and draw corresponding pixels
 	for (int row = 0; row < DIGIT_HEIGHT; row++){
 		for (int col = 0; col < DIGIT_WIDTH; col++){
 			if (digits[num][row] & (1 << (DIGIT_WIDTH - 1 - col))) {
-				pixel.x = x + col;
-                pixel.y = y + row;
-                pixel.width = 1;
-                pixel.height = 1;
-				drawRect(&pixel); // Draws a 1x1 pixel
+				drawPixel(x+col, y + row, color);
+				// pixel.x = x + col;
+                // pixel.y = y + row;
+                // pixel.width = 1;
+                // pixel.height = 1;
+				// drawRect(&pixel); // Draws a 1x1 pixel
 			}
 		}
 	}
@@ -206,6 +482,44 @@ void drawScore(int score, int x, int y, u16 color){
 	}
 
 	drawNumber(units, x + DIGIT_WIDTH + 1, y, color);
+}
+
+void drawLetter(char letter, int x, int y, u16 color) {
+    // Ensure the letter is uppercase A-Z
+    if (letter < 'A' || letter > 'Z') {
+        return;
+    }
+
+    int index = letter - 'A';  // Convert ASCII value to index (0-25)
+	// struct rect pixel;
+
+    // Loop over the letter's bitmap and draw the corresponding pixels
+    for (int row = 0; row < LETTER_HEIGHT; row++) {
+        for (int col = 0; col < LETTER_WIDTH; col++) {
+            if (alphabet[index][row] & (1 << (LETTER_WIDTH - 1 - col))) {
+				drawPixel(x + col, y + row, color);
+            }
+        }
+    }
+}
+
+void drawTitle(const char* title, int x, int y, u16 color) {
+    int offset = 0;
+
+    // Loop through each character in the string
+    for (int i = 0; title[i] != '\0'; i++) {
+        // If the character is a space, skip it with an offset
+        if (title[i] == ' ') {
+            offset += LETTER_WIDTH + 1;  // Add space between letters
+            continue;
+        }
+
+        // Draw the letter at the current position
+        drawLetter(title[i], x + offset, y, color);
+
+        // Move the x position to the right for the next letter
+        offset += LETTER_WIDTH + 1;  // Add space between letters
+    }
 }
 
 void clearScoreArea(int x, int y){
@@ -308,15 +622,10 @@ void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
 
 	if (pongBall->y < cpuPaddle->y){
 		cpuPaddle->y -= CPU_PADDLE_SPEED;
-		iprintf("\x1b[10;10HHello World!");
 	}
 	else if (pongBall->y + pongBall->height > cpuPaddle->y + cpuPaddle->height){
 		cpuPaddle->y += CPU_PADDLE_SPEED;
 	}
-};
-
-void inline initTextConsole(){
-	consoleDemoInit();
 };
 
 void initGBA(){
@@ -325,7 +634,8 @@ void initGBA(){
 
 	// Set GBA to mode 3; video memory
 	// SetMode( MODE_3 | BG2_ON );
-	REG_DISPCNT = MODE_3 | BG2_ENABLE; // This line probably does what the above line does
+	REG_DISPCNT = MODE_3 | BG0_ENABLE | BG1_ENABLE | BG2_ENABLE; // This line probably does what the above line does
+
 };
 
 void inline drawCenterLine(){
@@ -391,6 +701,9 @@ int main(void) {
 		// Draw line down center of pong field
 		drawCenterLine();
 
+		drawTitle("PATRICK CELEDIO", 10, 140, 0x02FF);
+		drawTitle("GBA PONG", 180, 140, 0x03FF);
+
 		// Respond to user input
 		scanKeys();
 		int keys_pressed = keysDown();
@@ -432,7 +745,7 @@ int main(void) {
 		// Draw the following objects on screen
 		drawPlayerPaddle(&playerPaddle);
 		drawCpuPaddle(&cpuPaddle);
-		drawRect(&pongBall);
+		drawBall(&pongBall);
 		clearScoreArea(20, 10);
 		clearScoreArea(200,10);
 		drawScore(playerScore, 20, 10, 0x7FFF);
