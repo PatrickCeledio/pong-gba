@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <gba_console.h>
 #include <gba_video.h>
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
@@ -27,6 +28,10 @@ typedef u16		M3LINE[SCREEN_WIDTH];
 
 // Definitions for in-game objects
 #define CPU_PADDLE_SPEED 2
+
+
+int playerScore = 0;
+int cpuScore = 0;
 
 // Paddle and ball structure (To basically make rectangles)
 struct rect { 
@@ -63,8 +68,6 @@ void drawPlayerPaddle(struct rect* cRect){
 		}
 	}
 };
-
-
 
 
 // Clear the pixels when objects moves
@@ -110,10 +113,17 @@ void checkCollision(struct rect* pongBall, struct rect* playerPaddle, struct rec
 		}
 
 		// Check collision between pong ball and left or right walls
-		if (pongBall->x <= 0 || pongBall->x + pongBall->width >= SCREEN_WIDTH){
+		if (pongBall->x <= 0){
 			clearRect(pongBall);
 			resetBall(pongBall);
 		}
+
+		if (pongBall->x + pongBall->width >= SCREEN_WIDTH){
+			clearRect(pongBall);
+			resetBall(pongBall);
+		}
+
+
 
 		// Check collision betwen pong ball and cpu paddle
 		if (pongBall->x + pongBall->width >= cpuPaddle->x &&
@@ -164,7 +174,8 @@ void initGBA(){
 	irqEnable(IRQ_VBLANK);
 
 	// Set GBA to mode 3; video memory
-	SetMode( MODE_3 | BG2_ON );
+	// SetMode( MODE_3 | BG2_ON );
+	REG_DISPCNT = MODE_3 | BG2_ENABLE;
 }
 
 void inline drawCenterLine(){
@@ -221,6 +232,7 @@ int main(void) {
 	resetBall(&pongBall);
 
 
+
 	while (1) {
 		// Updates game objects before the next frame is drawn
 		VBlankIntrWait();
@@ -275,7 +287,6 @@ int main(void) {
 		playerPaddle.prevX = playerPaddle.x;
 		playerPaddle.prevY = playerPaddle.y;
 		pongBall.prevX = pongBall.x;
-
 
 	}
 }
