@@ -17,6 +17,9 @@
 #define DASH_LENGTH		6
 #define GAP_LENGTH		4
 #define LINE_X_POSITION (SCREEN_WIDTH / 2)
+#define playerPaddle_color 0x7C00
+#define cpuPaddle_color 0x03E0
+
 
 // Need these for essentially writing directly to frame buffer with VRAM 
 typedef u16		M3LINE[SCREEN_WIDTH];
@@ -43,6 +46,26 @@ void drawRect(struct rect* cRect){
 		}
 	}
 };
+
+void drawCpuPaddle(struct rect* cRect){
+	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
+		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
+			drawPixel(i, j, cpuPaddle_color);
+		}
+	}
+};
+
+
+void drawPlayerPaddle(struct rect* cRect){
+	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
+		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
+			drawPixel(i, j, playerPaddle_color);
+		}
+	}
+};
+
+
+
 
 // Clear the pixels when objects moves
 void clearRect(struct rect* cRect){
@@ -244,8 +267,8 @@ int main(void) {
 		clearRect(&pongBall);
 
 		// Draw the following objects on screen
-		drawRect(&playerPaddle);
-		drawRect(&cpuPaddle);
+		drawPlayerPaddle(&playerPaddle);
+		drawCpuPaddle(&cpuPaddle);
 		drawRect(&pongBall);
 
 		// Update position
