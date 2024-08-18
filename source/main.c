@@ -36,6 +36,9 @@ typedef u16		M3LINE[SCREEN_WIDTH];
 int playerScore = 0;
 int cpuScore = 0;
 
+// Gotta nerf the CPU AI
+int cpuReactionDelay = 0;
+
 // Okay, I need dedicated header and source files now; these are digits for score
 // 0 = pixels left blank; 1 = pixels to be drawn
 const u8 digits[10][DIGIT_HEIGHT] = {
@@ -416,15 +419,6 @@ void inline drawPixel(int x, int y, int color){
 	m3_mem[y][x] = color;
 };
 
-// Draw rectangles..........
-void drawRect(struct rect* cRect){
-	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
-		for (int j = cRect->y; j < cRect->y + cRect->height; j++){
-			drawPixel(i, j, 0x7FFF);
-		}
-	}
-};
-
 // Draw ball
 void drawBall(struct rect* cRect){
 	for (int i = cRect->x; i < cRect->x + cRect->width; i++){
@@ -463,11 +457,6 @@ void drawNumber(int num, int x, int y, u16 color){
 		for (int col = 0; col < DIGIT_WIDTH; col++){
 			if (digits[num][row] & (1 << (DIGIT_WIDTH - 1 - col))) {
 				drawPixel(x+col, y + row, color);
-				// pixel.x = x + col;
-                // pixel.y = y + row;
-                // pixel.width = 1;
-                // pixel.height = 1;
-				// drawRect(&pixel); // Draws a 1x1 pixel
 			}
 		}
 	}
@@ -647,6 +636,7 @@ void inline drawCenterLine(){
 	}
 
 };
+
 
 
 int main(void) {
