@@ -29,15 +29,21 @@
 typedef u16		M3LINE[SCREEN_WIDTH];
 #define m3_mem	((M3LINE*)MEM_VRAM)
 
-// Definitions for in-game objects
-#define CPU_PADDLE_SPEED 2
-
 // Global variables for score
 int playerScore = 0;
 int cpuScore = 0;
 
 // Gotta nerf the CPU AI
+int cpuPaddleSpeed = 4;
 int cpuReactionDelay = 0;
+
+// Store how many frames has passed
+int frameCounter = 0;
+int freezeCounter = 0;
+
+// Checks if the winning message is displayed for CPU or Player
+bool isWinningMsgDisplayed = false; 
+bool isGameFrozen = false;
 
 // Okay, I need dedicated header and source files now; these are digits for score
 // 0 = pixels left blank; 1 = pixels to be drawn
@@ -511,7 +517,7 @@ void drawTitle(const char* title, int x, int y, u16 color) {
     }
 }
 
-void clearScoreArea(int x, int y){
+void clearPixelArea(int x, int y){
 	// Create an eraser area size
 	int width = (DIGIT_WIDTH + 1) * 2; 
 	int height = DIGIT_HEIGHT;
@@ -609,13 +615,92 @@ void updateCpuPaddle(struct rect* cpuPaddle, struct rect* pongBall){
 	// Update cpuPaddle position
 	cpuPaddle->prevY = cpuPaddle->y;
 
-	if (pongBall->y < cpuPaddle->y){
-		cpuPaddle->y -= CPU_PADDLE_SPEED;
+	// Make CPU paddle delayed in reaction
+	if (cpuReactionDelay == 0){
+		if (pongBall->y < cpuPaddle->y){
+			cpuPaddle->y -= cpuPaddleSpeed;
+		}
+		else if (pongBall->y + pongBall->height > cpuPaddle->y + cpuPaddle->height){
+			cpuPaddle->y += cpuPaddleSpeed;
+		}
+		cpuReactionDelay = 2; 
+	} else {
+		cpuReactionDelay--;
 	}
-	else if (pongBall->y + pongBall->height > cpuPaddle->y + cpuPaddle->height){
-		cpuPaddle->y += CPU_PADDLE_SPEED;
-	}
+
+	// Make the CPU Paddle miss randomly
+    if (rand() % 4 == 0) {  // 1 in 4 chance the CPU won't move
+        return;
+    }
 };
+
+void resetPositions(struct rect* playerPaddle, struct rect* cpuPaddle, struct rect* pongBall) {
+
+	// Clear pixel footsteps 
+	clearRect(playerPaddle);
+	clearRect(cpuPaddle);
+	clearRect(pongBall);
+	
+	// Reset player paddle position
+	playerPaddle->x = 1;
+	playerPaddle->y = SCREEN_HEIGHT / 2 - playerPaddle->height / 2;
+	playerPaddle->prevX = playerPaddle->x;
+	playerPaddle->prevY = playerPaddle->y;
+	playerPaddle->velocityX = 0;
+	playerPaddle->velocityY = 0;
+
+	// Reset CPU paddle position
+	cpuPaddle->x = SCREEN_WIDTH - playerPaddle->width - 1;
+	cpuPaddle->y = SCREEN_HEIGHT / 2 - cpuPaddle->height / 2;
+	cpuPaddle->prevX = cpuPaddle->x;
+	cpuPaddle->prevY = cpuPaddle->y;
+	cpuPaddle->velocityX = 0;
+	cpuPaddle->velocityY = 0;
+
+	// Reset ball position and velocity
+	pongBall->x = SCREEN_WIDTH / 2 - pongBall->width / 2;
+	pongBall->y = SCREEN_HEIGHT / 2 - pongBall->height / 2;
+	pongBall->prevX = pongBall->x;
+	pongBall->prevY = pongBall->y;
+    
+    // Randomize initial direction of the ball
+    pongBall->velocityX = (rand() % 2 == 0) ? 2 : -2;
+    pongBall->velocityY = (rand() % 2 == 0) ? 2 : -2;
+}
+
+
+void checkWinCondition(struct rect* playerPaddle, struct rect* cpuPaddle, struct rect* pongBall){			
+		if (playerScore == 5){
+			drawTitle("PLAYER WINS", 10, 80, 0x02FF);
+			playerScore = 0;
+			cpuScore = 0;        
+			isWinningMsgDisplayed = true;
+			resetPositions(playerPaddle, cpuPaddle, pongBall);  // Reset positions
+			isGameFrozen = true;
+			freezeCounter = 0;  // Start freeze period
+        	frameCounter = 0;  // Reset counter when title is displayed
+			resetPositions(playerPaddle, cpuPaddle, pongBall); 
+		}else if (cpuScore == 5){
+			drawTitle("CPU WINS", 180, 80, 0x03FF);
+			playerScore = 0;
+			cpuScore = 0;		
+			isWinningMsgDisplayed = true;
+			resetPositions(playerPaddle, cpuPaddle, pongBall); 
+			isGameFrozen = true;
+			freezeCounter = 0;
+        	frameCounter = 0;  
+			resetPositions(playerPaddle, cpuPaddle, pongBall); 
+		}
+};
+
+void clearTitle() {
+    // Clear the area where the title is displayed (adjust size as needed)
+    for (int y = 80; y < 90; y++) {  // Adjust this range to cover the title area
+        for (int x = 10; x < 230; x++) {  // Clear from left to right
+            drawPixel(x, y, 0x0000);  // Clear with black
+        }
+    }
+}
 
 void initGBA(){
 	irqInit();
@@ -636,8 +721,6 @@ void inline drawCenterLine(){
 	}
 
 };
-
-
 
 int main(void) {
 	// Sets up the necessary configurations for the GBA to run this game
@@ -736,8 +819,11 @@ int main(void) {
 		drawPlayerPaddle(&playerPaddle);
 		drawCpuPaddle(&cpuPaddle);
 		drawBall(&pongBall);
-		clearScoreArea(20, 10);
-		clearScoreArea(200,10);
+
+		checkWinCondition(&playerPaddle, &cpuPaddle, &pongBall);
+
+		clearPixelArea(20, 10);
+		clearPixelArea(200,10);
 		drawScore(playerScore, 20, 10, 0x7FFF);
 		drawScore(cpuScore, 200, 10, 0x7FFF);
 
@@ -746,7 +832,14 @@ int main(void) {
 		playerPaddle.prevY = playerPaddle.y;
 		pongBall.prevX = pongBall.x;
 
-	}
+		if (isWinningMsgDisplayed) {
+			frameCounter++;
+
+			// After 300 frames (~5 seconds at 60 FPS), clear the title
+			if (frameCounter >= 150) {
+				clearTitle();  // Implement this function to clear the title area
+				isWinningMsgDisplayed = false;  // Reset the flag
+       		}
+    	}
+	}// End while() 
 }
-
-
