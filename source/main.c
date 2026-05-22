@@ -1,4 +1,6 @@
-// Patrick CEledio
+// Patrick Celedio
+// GBA_Pong_Homebrew
+// Last Updated: 05/21/2026
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -712,7 +714,7 @@ void initGBA(){
 
 };
 
-void inline drawCenterLine(){
+void drawCenterLine(){
 	// Draw white central line on screen
 	for (int vertical_line = 0; vertical_line < SCREEN_HEIGHT; vertical_line += (DASH_LENGTH + GAP_LENGTH)){
 		for (int dashY = vertical_line; dashY < vertical_line + DASH_LENGTH && dashY < SCREEN_HEIGHT; dashY++){
@@ -721,6 +723,12 @@ void inline drawCenterLine(){
 	}
 
 };
+
+void redrawBackgroundDamage(void) {
+    drawCenterLine();
+    drawTitle("PATRICK CELEDIO", 10, 140, 0x02FF);
+    drawTitle("GBA PONG", 180, 140, 0x03FF);
+}
 
 int main(void) {
 	// Sets up the necessary configurations for the GBA to run this game
@@ -765,17 +773,12 @@ int main(void) {
 	// Initialize position and velocity of pongball to default
 	resetBall(&pongBall);
 
-
+    /* Static Objects */
+    redrawBackgroundDamage();
 
 	while (1) {
 		// Updates game objects before the next frame is drawn
 		VBlankIntrWait();
-
-		// Draw line down center of pong field
-		drawCenterLine();
-
-		drawTitle("PATRICK CELEDIO", 10, 140, 0x02FF);
-		drawTitle("GBA PONG", 180, 140, 0x03FF);
 
 		// Respond to user input
 		scanKeys();
@@ -814,6 +817,9 @@ int main(void) {
 		clearRect(&playerPaddle);
 		clearRect(&cpuPaddle);
 		clearRect(&pongBall);
+
+        // Redraws the background and static objects to cover up any damage from moving objects AKA clearRect()
+        redrawBackgroundDamage();
 
 		// Draw the following objects on screen
 		drawPlayerPaddle(&playerPaddle);
