@@ -42,17 +42,7 @@ This project uses:
     ROM fixed!
 ```
 3) Run pong-gba.gba on your favorite GBA emulator
-```
-    Run with mGBA:
 
-    mgba .\pong-gba.gba
-
-    Or open the `.gba` file manually in mGBA.
-
-    Recommended emulator:
-
-    - mGBA
-```
 # Issues:
 
 - If you are getting an error along the lines of "Bad file descriptor" whenever
